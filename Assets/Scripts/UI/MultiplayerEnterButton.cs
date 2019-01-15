@@ -15,6 +15,8 @@ public class MultiplayerEnterButton : MonoBehaviour
                 SceneManager.LoadScene("CreategameScene");
                 break;
             case 1:
+                FindObjectOfType<ConnectionDiscovery>().StartListening(); // Start listening for games
+                SceneManager.LoadScene("JoingameScene");
                 break;
             default:
                 break;

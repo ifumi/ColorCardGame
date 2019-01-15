@@ -84,7 +84,6 @@ public class CustomNetworkManager : NetworkManager
         base.OnServerConnect(conn);
         Debug.Log("New client " + conn.address + " connected!");
         connectedPlayers++;
-        HostingText.SetConnections(connectedPlayers); // Update UI Text
 
         connectedClients.Add(conn);
 
@@ -106,7 +105,6 @@ public class CustomNetworkManager : NetworkManager
         base.OnServerDisconnect(conn);
         Debug.Log("Client " + conn.address + " disconnected!");
         connectedPlayers--;
-        HostingText.SetConnections(connectedPlayers); // Update UI Text
 
         connectedClients.Remove(conn);
 

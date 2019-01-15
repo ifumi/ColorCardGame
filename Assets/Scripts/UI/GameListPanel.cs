@@ -7,35 +7,41 @@ public class GameListPanel : MonoBehaviour
 {
 
     [SerializeField]
-    private JoinButton joinButtonPrefab;
+    private JoingameCard joinCardPrefab;
 
     private void Awake()
     {
         AvailableGamesList.OnAvailableMatchesChanged += AvailableGamesList_OnAvailableMatchesChanged;    
     }
 
-    private void AvailableGamesList_OnAvailableMatchesChanged(List<LanConnnectionInfo> games)
+    private void OnDestroy()
     {
-        ClearExistingButtons();
-        CreateNewJoinGameButtons(games);
+        AvailableGamesList.OnAvailableMatchesChanged -= AvailableGamesList_OnAvailableMatchesChanged;
     }
 
-    private void ClearExistingButtons()
+    private void AvailableGamesList_OnAvailableMatchesChanged(List<LanConnnectionInfo> games)
     {
-        var buttons = GetComponentsInChildren<JoinButton>();
-        if (buttons == null) return;
-        foreach (var button in buttons)
+        ClearExistingCards();
+        CreateNewCards(games);
+    }
+
+    private void ClearExistingCards()
+    {
+        var cards = GetComponentsInChildren<JoingameCard>();
+        if (cards == null) return;
+        foreach (var card in cards)
         {
-            Destroy(button.gameObject);
+            Destroy(card.gameObject);
         }
     }
 
-    private void CreateNewJoinGameButtons(List<LanConnnectionInfo> games)
+    private void CreateNewCards(List<LanConnnectionInfo> games)
     {
         foreach(var game in games)
         {
-            var button = Instantiate(joinButtonPrefab);
-            button.Initialize(game, transform);
+            var parent = GameObject.Find("ScrollPanel").transform;
+            var card = Instantiate(joinCardPrefab);
+            card.Initialize(game, parent);
         }
     }
 }

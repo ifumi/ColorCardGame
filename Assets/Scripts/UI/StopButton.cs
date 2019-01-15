@@ -8,6 +8,5 @@ public class StopButton : MonoBehaviour
     {
         FindObjectOfType<CustomNetworkManager>().StopHosting();
         FindObjectOfType<ConnectionDiscovery>().Stop();
-        HostingText.SetNotHosting();
     }
 }

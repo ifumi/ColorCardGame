@@ -5,11 +5,12 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class ConnectionDiscovery : NetworkDiscovery   
 {
-    private const float EXPIRE_TIMEOUT = 5f;
+    private const float EXPIRE_TIMEOUT = 2f;
 
     private bool isBroadcasting = false;
     private bool isListening = false;
@@ -55,6 +56,7 @@ public class ConnectionDiscovery : NetworkDiscovery
             base.StopBroadcast();
             isBroadcasting = false;
             isListening = false;
+            lanAddresses.Clear();
         }
     }
 
@@ -112,7 +114,8 @@ public class ConnectionDiscovery : NetworkDiscovery
     /// </summary>
     private void UpdateMatchInfo()
     {
-        AvailableGamesList.HandleNewGamesList(lanAddresses.Keys.ToList());      
+        if (SceneManager.GetActiveScene().name == "JoingameScene")
+            AvailableGamesList.HandleNewGamesList(lanAddresses.Keys.ToList());
     }
 
 }
