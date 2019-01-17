@@ -9,6 +9,7 @@ public class StartupEnterButton : MonoBehaviour
 
     public void EnterButtonClicked()
     {
+
         switch (scrollRect.GetSelectedImage())
         {
             case 0:             

@@ -8,7 +8,7 @@ public class SettingsEnterButton : MonoBehaviour
 {
     public void SettingsEnterClicked()
     {
-        Text playername = GameObject.Find("InputFieldName").GetComponentInChildren<Text>();
+        Text playername = GameObject.Find("Text").GetComponent<Text>();
 
         if (playername.text != "")
         {
