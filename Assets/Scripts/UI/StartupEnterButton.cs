@@ -17,6 +17,7 @@ public class StartupEnterButton : MonoBehaviour
                 SceneManager.LoadScene("MultiplayerScene");
                 break;
             case 2:
+                SceneManager.LoadScene("SettingsScene");
                 break;
             default:
                 break;
