@@ -13,7 +13,6 @@ public static class AvailableGamesList
     public static void HandleNewGamesList(List<LanConnnectionInfo> list)
     {
         gamesList = list;
-
         OnAvailableMatchesChanged(gamesList);
     }
 

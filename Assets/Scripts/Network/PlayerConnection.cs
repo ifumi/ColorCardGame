@@ -92,8 +92,6 @@ public class PlayerConnection : NetworkBehaviour
     // --- COMMANDS, RPCs and Network Stuff ----
     // -----------------------------------------
 
-    
-
     [Command]
     public void CmdSpawnTables()
     {

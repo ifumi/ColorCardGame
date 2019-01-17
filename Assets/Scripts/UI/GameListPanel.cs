@@ -2,12 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameListPanel : MonoBehaviour
 {
 
     [SerializeField]
     private JoingameCard joinCardPrefab;
+
+    public ScrollRectSnap scrollRect;
 
     private void Awake()
     {
@@ -33,6 +36,7 @@ public class GameListPanel : MonoBehaviour
         {
             Destroy(card.gameObject);
         }
+        scrollRect.ClearLists();
     }
 
     private void CreateNewCards(List<LanConnnectionInfo> games)
@@ -40,8 +44,9 @@ public class GameListPanel : MonoBehaviour
         foreach(var game in games)
         {
             var parent = GameObject.Find("ScrollPanel").transform;
-            var card = Instantiate(joinCardPrefab);
+            JoingameCard card = Instantiate(joinCardPrefab);
             card.Initialize(game, parent);
+            scrollRect.AddImage(card.gameObject.GetComponent<Image>());
         }
     }
 }

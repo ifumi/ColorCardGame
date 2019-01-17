@@ -8,14 +8,19 @@ public class JoingameCard : MonoBehaviour
     private Text cardText;
     private LanConnnectionInfo game;
 
+    public LanConnnectionInfo GetGameInfo()
+    {
+        return game;
+    }
+
     private void Awake()
     {
         cardText = GetComponentInChildren<Text>();
     }
 
-    public void Initialize(LanConnnectionInfo game, Transform panelTransform)
+    public void Initialize(LanConnnectionInfo newGame, Transform panelTransform)
     {
-        this.game = game;
+        this.game = newGame;
         cardText.text = game.name;
         transform.SetParent(panelTransform);
         GetComponent<RectTransform>().anchoredPosition = new Vector3(GameObject.Find("GameController").GetComponent<ScrollRectSnap>().GetNextPosition(), 0, 0);

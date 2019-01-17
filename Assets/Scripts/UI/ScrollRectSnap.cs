@@ -20,6 +20,14 @@ public class ScrollRectSnap : MonoBehaviour
 
     private List<Image> imagesList; // Only used in JoingameScene for dynamic card initialisation
 
+    public JoingameCard GetSelectedCard()
+    {
+        if (minImageNum > imagesList.Count)
+            return null;
+        Image img = imagesList[minImageNum];
+        return img.gameObject.GetComponent<JoingameCard>();
+    }
+
 
     public int GetNextPosition()
     {

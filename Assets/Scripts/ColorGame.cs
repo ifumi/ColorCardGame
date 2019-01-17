@@ -6,10 +6,6 @@ using UnityEngine;
 
 public static class ColorGame
 {
-
-    private static Stack<ColorCard> gameBoardStack;
-
-    private static int currentPlayerIdx; // Index of current player in list
     private static int currentDrawCount; // Count to draw for the next eligible player (sum of PLUS cards played before drawing)
     private static bool reverse;
 
@@ -20,24 +16,13 @@ public static class ColorGame
 
     static ColorGame()
     {
-        gameBoardStack = new Stack<ColorCard>();
+    
     }
 
     public static bool IsReady()
     {
         return isReady;
     }
-
-    public static int GetCurrentPlayerIdx()
-    {
-        return currentPlayerIdx;
-    }
-
-    public static ColorCard PeekGameBoardStack()
-    {
-        return gameBoardStack.Peek();
-    }
-
 
     public static bool IsGameOver()
     {
