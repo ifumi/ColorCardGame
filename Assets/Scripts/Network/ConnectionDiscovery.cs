@@ -14,7 +14,9 @@ public class ConnectionDiscovery : NetworkDiscovery
 
     private bool isBroadcasting = false;
     private bool isListening = false;
- 
+
+    private AndroidJavaObject multicastLock;
+
     private Dictionary<LanConnnectionInfo, float> lanAddresses = new Dictionary<LanConnnectionInfo, float>();
 
     /// <summary>
@@ -40,8 +42,12 @@ public class ConnectionDiscovery : NetworkDiscovery
     {
         if (!isListening && !isBroadcasting)
         {
-            Initialize();
-            StartAsClient();
+            if (Application.platform == RuntimePlatform.Android)
+                MulticastLock();
+
+            base.Initialize();
+            base.StartAsClient();
+
             isListening = true;
             StartCoroutine(CleanupExpiredEntries());
         }
@@ -53,7 +59,10 @@ public class ConnectionDiscovery : NetworkDiscovery
     public void Stop()
     {
         if (isBroadcasting || isListening)
-        {          
+        {
+            if (multicastLock != null)
+                multicastLock.Call("release");
+
             base.StopBroadcast();
             isBroadcasting = false;
             isListening = false;
@@ -123,4 +132,19 @@ public class ConnectionDiscovery : NetworkDiscovery
             AvailableGamesList.HandleNewGamesList(lanAddresses.Keys.ToList());
     }
 
+    /// <summary>
+    /// If you have problems with multicast lock on android, this method can help you
+    /// </summary>
+    void MulticastLock()
+    {
+        using (AndroidJavaObject activity = new AndroidJavaClass("com.unity3d.player.UnityPlayer").GetStatic<AndroidJavaObject>("currentActivity"))
+        {
+            using (var wifiManager = activity.Call<AndroidJavaObject>("getSystemService", "wifi"))
+            {
+                multicastLock = wifiManager.Call<AndroidJavaObject>("createMulticastLock", "lock");
+                multicastLock.Call("acquire");
+                Debug.Log("multicast lock acquired");
+            }
+        }
+    }
 }
