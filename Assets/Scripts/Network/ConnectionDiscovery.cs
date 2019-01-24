@@ -42,7 +42,7 @@ public class ConnectionDiscovery : NetworkDiscovery
     {
         if (!isListening && !isBroadcasting)
         {
-            MulticastLock();
+            if (Application.platform == RuntimePlatform.Android) MulticastLock();
             base.Initialize();
             base.StartAsClient();
             isListening = true;
