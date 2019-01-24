@@ -42,7 +42,6 @@ public class ConnectionDiscovery : NetworkDiscovery
     {
         if (!isListening && !isBroadcasting)
         {
-
             MulticastLock();
             base.Initialize();
             base.StartAsClient();
@@ -58,6 +57,7 @@ public class ConnectionDiscovery : NetworkDiscovery
     {
         if (isBroadcasting || isListening)
         {
+            if (multicastLock != null)  multicastLock.Call("release");
             base.StopBroadcast();
             isBroadcasting = false;
             isListening = false;
@@ -139,5 +139,7 @@ public class ConnectionDiscovery : NetworkDiscovery
 
         }
     }
+
+
 
 }
