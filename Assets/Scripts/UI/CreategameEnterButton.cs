@@ -12,7 +12,11 @@ public class CreategameEnterButton : MonoBehaviour
         if (infield.text != "")
         {
             // Start Hosting
-            FindObjectOfType<ConnectionDiscovery>().StartBroadcasting(infield.text); // Broadcast my game name
+            string playerName = PlayerPrefs.GetString("Name");
+            if (playerName == "")
+                playerName = "Unknown";
+
+            FindObjectOfType<ConnectionDiscovery>().StartBroadcasting(infield.text, playerName); // Broadcast my game and host name
             FindObjectOfType<CustomNetworkManager>().StartHosting(); // Start as Host
 
             SceneManager.LoadScene("WaitingScene");

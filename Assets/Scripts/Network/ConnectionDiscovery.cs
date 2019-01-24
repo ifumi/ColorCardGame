@@ -21,13 +21,14 @@ public class ConnectionDiscovery : NetworkDiscovery
     /// Starts broadcasting the connection parameters.
     /// </summary>
     /// <param name="gameName">The name of the game to broadcast.</param>
-    public void StartBroadcasting(string gameName)
+    public void StartBroadcasting(string gameName, string hostName)
     {
         if (!isBroadcasting && !isListening)
-        {
-            broadcastData = gameName;
-            base.Initialize();
-            base.StartAsServer();
+        {            
+            broadcastData = gameName + ";" + hostName;
+            broadcastData = broadcastData.PadRight(20, '#');
+            Initialize();
+            StartAsServer();
             isBroadcasting = true;
         }
     }
@@ -39,8 +40,8 @@ public class ConnectionDiscovery : NetworkDiscovery
     {
         if (!isListening && !isBroadcasting)
         {
-            base.Initialize();
-            base.StartAsClient();
+            Initialize();
+            StartAsClient();
             isListening = true;
             StartCoroutine(CleanupExpiredEntries());
         }
@@ -52,7 +53,7 @@ public class ConnectionDiscovery : NetworkDiscovery
     public void Stop()
     {
         if (isBroadcasting || isListening)
-        {
+        {          
             base.StopBroadcast();
             isBroadcasting = false;
             isListening = false;
@@ -70,7 +71,11 @@ public class ConnectionDiscovery : NetworkDiscovery
         base.OnReceivedBroadcast(fromAddress, data);
         Debug.Log("Received broadcast: " + fromAddress + ", " + data);
 
+        data = data.Replace("#", ""); // Remove padded chars
+
         LanConnnectionInfo info = new LanConnnectionInfo(fromAddress, data);
+        Debug.Log(info.gameName + ", " + info.hostName);
+
         if (!lanAddresses.ContainsKey(info))
         {
             lanAddresses.Add(info, Time.time + EXPIRE_TIMEOUT);
@@ -78,7 +83,7 @@ public class ConnectionDiscovery : NetworkDiscovery
         } else
         {
             lanAddresses[info] = Time.time + EXPIRE_TIMEOUT;
-        }
+        }     
     }
 
     /// <summary>

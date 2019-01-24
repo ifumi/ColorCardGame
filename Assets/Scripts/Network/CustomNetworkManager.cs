@@ -86,14 +86,6 @@ public class CustomNetworkManager : NetworkManager
         connectedPlayers++;
 
         connectedClients.Add(conn);
-
-        // Tell clients that the server state changed
-        if (SceneManager.GetActiveScene().name == "WaitingScene")
-        {
-            WaitingBehaviour wb = GameObject.Find("GameManager").GetComponent<WaitingBehaviour>();
-            wb.RpcSetConnectedPlayers(connectedPlayers, new string[] { "test", "test2", "test3", "test4"}); // TODO GET NAMES
-            
-        }
     }
 
     /// <summary>
@@ -111,8 +103,7 @@ public class CustomNetworkManager : NetworkManager
         // Tell clients that the server state changed
         if (SceneManager.GetActiveScene().name == "WaitingScene")
         {
-            WaitingBehaviour wb = GameObject.Find("GameManager").GetComponent<WaitingBehaviour>();
-            wb.RpcSetConnectedPlayers(connectedPlayers, new string[] { "test", "test2", "test3", "test4" }); // TODO GET NAMES
+            
         }
     }
 

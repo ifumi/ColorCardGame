@@ -8,7 +8,6 @@ using UnityEngine.SceneManagement;
 
 public class PlayerConnection : NetworkBehaviour
 {
-
     private GameObject currentCard;
     private Player player;
 
