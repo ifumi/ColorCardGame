@@ -49,10 +49,13 @@ public class WaitingPlayersPanel : MonoBehaviour
                 goto case 1;
             case 1:
                 player1.GetComponentInChildren<Image>().sprite = player1Active;
-                player1.GetComponentInChildren<Text>().text = playerNames[1];
+                player1.GetComponentInChildren<Text>().text = playerNames[0];
                 break;
             default:
                 break;
         }
+
+        WaitingPlayercountText text = GameObject.Find("PlayercountText").GetComponent<WaitingPlayercountText>();
+        text.SetPlayerCount(connectedPlayers);
     }
 }

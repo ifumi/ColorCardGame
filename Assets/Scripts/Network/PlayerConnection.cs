@@ -13,6 +13,9 @@ public class PlayerConnection : NetworkBehaviour
 
     private Stack<ColorCard> SpawnedCards;
 
+    private WaitingPlayersPanel waitingPlayersPanel;
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -21,7 +24,7 @@ public class PlayerConnection : NetworkBehaviour
 
         if (sceneName == "MainScene")
         {
-            // UI: Find our wheel and current card display
+            // UI: Find current card display
             player = GameObject.Find("Player").GetComponent<Player>();
             currentCard = GameObject.Find("CurrentCard");
 
@@ -58,38 +61,72 @@ public class PlayerConnection : NetworkBehaviour
 
                 // Tell server to give us our initial set of cards
                 CmdGetInitialCards();
-            }          
+            }
+        }
+        else
+        {
+            Debug.Log("Entering Coroutine");
+            StartCoroutine(WaitForPlayerRegister(PlayerPrefs.GetString("Name")));
         }
     }
 
-    // Update is called once per frame
-    void Update()
+    public IEnumerator WaitForPlayerRegister(string name)
     {
+        while (!IsInWaitingScene())
+        {
+            Debug.Log("Not in waiting scene!");
+            yield return new WaitForSeconds(0.5f);
+            WaitForPlayerRegister(name);
+        }
+
+        Debug.Log("In Coroutine");
+        player = GameObject.Find("Player").GetComponent<Player>();
+        waitingPlayersPanel = GameObject.Find("PlayersPanel").GetComponent<WaitingPlayersPanel>();
+        Debug.Log("Initialized objects; "+ isLocalPlayer);
+
         if (isLocalPlayer)
         {
-
+            CmdRegisterPlayer(PlayerPrefs.GetString("Name"));
         }
+            
 
-        if (isServer)
-        {
-
-        }
+        yield return null;
     }
 
 
-    private bool ClientsReady()
+    private bool IsInWaitingScene()
     {
-        // Wait for all the clients to be ready
-        foreach (NetworkConnection conn in NetworkServer.connections)
-        {
-            if (!conn.isReady) return false;
-        }
-        return true;
+        return SceneManager.GetActiveScene().name == "WaitingScene";
     }
 
     // -----------------------------------------
     // --- COMMANDS, RPCs and Network Stuff ----
     // -----------------------------------------
+
+    [Command]
+    void CmdRegisterPlayer(string playerName)
+    {
+        if (player.connectedPlayers < 4)
+        {
+            player.AddPlayer(playerName);
+            RpcConnectedPlayersUpdate(player.playerNames, player.connectedPlayers);
+
+            // UPDATE OUR UI
+            waitingPlayersPanel.UpdatePlayersPanel(player.connectedPlayers, player.playerNames);
+            Debug.Log("Register player: " + player.connectedPlayers + ", " + playerName);
+        }
+    }
+
+    [ClientRpc]
+    void RpcConnectedPlayersUpdate(string[] names, int players)
+    {
+        if (SceneManager.GetActiveScene().name == "WaitingScene")
+        {
+            // UPDATE OUR UI
+            player.SetPlayers(names, players);
+            waitingPlayersPanel.UpdatePlayersPanel(player.connectedPlayers, player.playerNames);
+        }
+    }
 
     [Command]
     public void CmdSpawnTables()
@@ -306,7 +343,4 @@ public class PlayerConnection : NetworkBehaviour
         c.color = color;
         player.SetTopCard(c);
     }
-
-
-
 }

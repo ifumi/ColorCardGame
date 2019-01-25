@@ -14,6 +14,10 @@ public class Player : MonoBehaviour
     private ColorCard topCard;
     private List<ColorCard> MyCards;
 
+    // For game synchronisation
+    public string[] playerNames = new string[4];
+    public int connectedPlayers = 0;
+
     // For game logic
     private bool hasTurn = false;
     private int currentPlayerIndex;
@@ -21,6 +25,18 @@ public class Player : MonoBehaviour
     private bool reverse;
 
     private PlayerConnection connection;
+
+    public void AddPlayer(string name)
+    {
+        playerNames[connectedPlayers] = name;
+        connectedPlayers++;
+    }
+
+    public void SetPlayers(string[] names, int count)
+    {
+        playerNames = names;
+        connectedPlayers = count;
+    }
 
     public void SetCurrentPlayerIndex(int idx)
     {
@@ -175,9 +191,6 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Debug.Log(hasTurn);
-        Debug.Log(currentDrawCount);
-        Debug.Log(topCard.color);
     }
 
     public void SpawnTables(int count)
