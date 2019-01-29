@@ -6,8 +6,8 @@ using UnityEngine.UI;
 
 public class TablesManager : MonoBehaviour
 {
-
-    public Sprite ACTIVE, INACTIVE;
+    
+    public Table myTable, player2, player3, player4;
 
     // Start is called before the first frame update
     void Start()
@@ -21,56 +21,89 @@ public class TablesManager : MonoBehaviour
         
     }
 
-    public void SpawnTables(int count)
+    public void SpawnTables(int count, string[] names, int myPlayerIndex)
     {
+        SetAllInvisible();
         switch(count)
         {
-            case 1:
-                SetVisible("MyTable");
-                break;
-            case 2:
-                SetVisible("MyTable");
-                SetVisible("Player2");
-                break;
-            case 3:
-                SetVisible("MyTable");
-                SetVisible("Player2");
-                SetVisible("Player3");
-                break;
             case 4:
-                SetVisible("MyTable");
-                SetVisible("Player2");
-                SetVisible("Player3");
-                SetVisible("Player4");
+                player4.GetComponent<Image>().enabled = true;
+                player4.GetComponentInChildren<Text>().enabled = true;
+                player4.GetComponentInChildren<Text>().text = names[(myPlayerIndex + 3) % count];
+                goto case 3;
+            case 3:
+                player3.GetComponent<Image>().enabled = true;
+                player3.GetComponentInChildren<Text>().enabled = true;
+                player3.GetComponentInChildren<Text>().text = names[(myPlayerIndex + 2) % count];
+                goto case 2;
+            case 2:
+                player2.GetComponent<Image>().enabled = true;
+                player2.GetComponentInChildren<Text>().enabled = true;
+                player2.GetComponentInChildren<Text>().text = names[(myPlayerIndex + 1) % count];
+                goto case 1;
+            case 1:
+                myTable.GetComponent<Image>().enabled = true;
+                myTable.GetComponentInChildren<Text>().enabled = true;
+                myTable.GetComponentInChildren<Text>().text = names[myPlayerIndex];
                 break;
         }
-
     }
 
-    private void SetVisible(string name)
+    public void SetTableActive(string name)
     {
-        foreach (Transform child in transform)
+        SetAllInactive();
+        if (myTable.GetComponentInChildren<Text>().text == name)
         {
-            if (child.gameObject.name == name)
-                child.GetComponent<Image>().enabled = true;
+            myTable.SetActive(true);
         }
+        if (player2.GetComponentInChildren<Text>().text == name)
+        {
+            player2.SetActive(true);
+        }
+        if (player3.GetComponentInChildren<Text>().text == name)
+        {
+            player3.SetActive(true);
+        }
+        if (player4.GetComponentInChildren<Text>().text == name)
+        {
+            player4.SetActive(true);
+        }
+    }
+
+    private void SetAllInactive()
+    {
+        myTable.SetActive(false);
+        player2.SetActive(false);
+        player3.SetActive(false);
+        player4.SetActive(false);
     }
 
     private void SetAllInvisible()
     {
-        foreach(Transform child in transform)
-        {
-            child.GetComponent<Image>().enabled = false;
-        }
+        myTable.GetComponent<Image>().enabled = false;
+        player2.GetComponent<Image>().enabled = false;
+        player3.GetComponent<Image>().enabled = false;
+        player4.GetComponent<Image>().enabled = false;
+
+        myTable.GetComponentInChildren<Text>().enabled = false;
+        player2.GetComponentInChildren<Text>().enabled = false;
+        player3.GetComponentInChildren<Text>().enabled = false;
+        player4.GetComponentInChildren<Text>().enabled = false;
     }
 
     private void SetAllVisible()
     {
-        foreach (Transform child in transform)
-        {
-            child.GetComponent<Image>().enabled = true;
-        }
+        myTable.GetComponent<Image>().enabled = true;
+        player2.GetComponent<Image>().enabled = true;
+        player3.GetComponent<Image>().enabled = true;
+        player4.GetComponent<Image>().enabled = true;
+
+        myTable.GetComponentInChildren<Text>().enabled = true;
+        player2.GetComponentInChildren<Text>().enabled = true;
+        player3.GetComponentInChildren<Text>().enabled = true;
+        player4.GetComponentInChildren<Text>().enabled = true;
     }
+
 
 
 }

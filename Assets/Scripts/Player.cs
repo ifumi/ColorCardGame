@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
@@ -15,8 +16,12 @@ public class Player : MonoBehaviour
     private List<ColorCard> MyCards;
 
     // For game synchronisation
-    public string[] playerNames = new string[4];
-    public int connectedPlayers = 0;
+    public static string[] playerNames = new string[4];
+    public static int connectedPlayers = 0;
+    public static int myPlayerIndex;
+
+    public static int[] playerCardsCount = new int[4];
+    public static bool[] playersReady = new bool[] {false, false, false, false};
 
     // For game logic
     private bool hasTurn = false;
@@ -25,22 +30,61 @@ public class Player : MonoBehaviour
     private bool reverse;
 
     private PlayerConnection connection;
+    private WaitingPlayersPanel waitingPlayersPanel;
+
+    public void SetPlayerReady(int index)
+    {
+        playersReady[index] = true;
+    }
+
+    public bool AllPlayersReady()
+    {
+        for (int i = 0; i < connectedPlayers; i++)
+        {
+            if (playersReady[i] == false) return false;
+        }
+        return true;
+    }
+
+    private void Start()
+    {
+        if (SceneManager.GetActiveScene().name == "WaitingScene")
+            waitingPlayersPanel = GameObject.Find("PlayersPanel").GetComponent<WaitingPlayersPanel>();           
+    }
 
     public void AddPlayer(string name)
     {
         playerNames[connectedPlayers] = name;
         connectedPlayers++;
+
+        if (waitingPlayersPanel != null)
+            waitingPlayersPanel.UpdatePlayersPanel(connectedPlayers, playerNames);
     }
 
     public void SetPlayers(string[] names, int count)
     {
         playerNames = names;
         connectedPlayers = count;
+
+        if (waitingPlayersPanel != null)
+            waitingPlayersPanel.UpdatePlayersPanel(connectedPlayers, playerNames);
+
+        foreach (string name in names)
+        {
+            if (name == PlayerPrefs.GetString("Name"))
+            {
+                myPlayerIndex = Array.IndexOf(names, name);
+            }
+        }
+
+        if (tablesManager != null)
+            tablesManager.SpawnTables(count, names, myPlayerIndex);
     }
 
     public void SetCurrentPlayerIndex(int idx)
     {
         currentPlayerIndex = idx;
+        tablesManager.SetTableActive(playerNames[idx]);
     }
 
     public int GetCurrentPlayerIndex()
@@ -193,9 +237,9 @@ public class Player : MonoBehaviour
     {
     }
 
-    public void SpawnTables(int count)
+    public void SpawnTables(int count, string[] names, int myPlayerIndex)
     {
-        tablesManager.SpawnTables(count);
+        tablesManager.SpawnTables(count, names, myPlayerIndex);
     }
 
     public void RotateWheel()

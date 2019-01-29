@@ -9,111 +9,152 @@ using UnityEngine.SceneManagement;
 public class PlayerConnection : NetworkBehaviour
 {
     private GameObject currentCard;
+
     private Player player;
 
     private Stack<ColorCard> SpawnedCards;
 
-    private WaitingPlayersPanel waitingPlayersPanel;
+    private bool isRegistered = false;
+    private bool isStarted = false;
 
+    private CustomNetworkManager networkManager;
 
     // Start is called before the first frame update
     void Start()
     {
-        Scene currentScene = SceneManager.GetActiveScene();
-        string sceneName = currentScene.name;
+        DontDestroyOnLoad(this);
+        
+        networkManager = FindObjectOfType<CustomNetworkManager>();
 
-        if (sceneName == "MainScene")
+        if (isLocalPlayer)
+            networkManager.SetServerConnection(this);
+
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode arg1)
+    {
+        switch (scene.name)
         {
+            case "MainScene":
+                if (!isStarted)
+                {
+
+                }
+                break;
+        }
+    }
+
+    private void Update()
+    {
+        // Register when entering waiting scene
+        if (SceneManager.GetActiveScene().name == "WaitingScene" && isLocalPlayer && !isRegistered)
+        {
+            player = GameObject.Find("Player").GetComponent<Player>();
+            player.SetConnection(this);
+
+            string playername = PlayerPrefs.GetString("Name");
+            if (playername == "")
+                playername = "Unknown";
+            
+            CmdRegisterPlayer(playername);
+            isRegistered = true;         
+        }
+
+        // Start game when entering main scene
+        if (SceneManager.GetActiveScene().name == "MainScene" && !isStarted)
+        {                    
             // UI: Find current card display
             player = GameObject.Find("Player").GetComponent<Player>();
             currentCard = GameObject.Find("CurrentCard");
 
+            if (player == null || currentCard == null) return; // Scene not fully loaded
+
             if (isServer)
             {
-                // Spawn tables
-                CmdSpawnTables();
-
                 // Initialize cards on game board
                 SpawnedCards = new Stack<ColorCard>();
-
-                // Spawn initial card
-                ColorCard cc;
-                do
-                {
-                    cc = ColorCardStack.DrawCard();
-                    CmdSpawnCardOnGameboard(cc);
-                } while (cc.type != ColorCard.Type.STANDARD);
-
-                // Start game
-                player.SetCurrentPlayerIndex(0); // Server starts always first
-                player.SetTurn(true);
             }
 
-            if (!isLocalPlayer)
-            {
-                // This object belongs to another player
-                return;
-            }
-            else
+            if (isLocalPlayer)
             {
                 // Set reference for the player so we can play cards
                 player.SetConnection(this);
 
                 // Tell server to give us our initial set of cards
+                CmdSignalPlayerReady();
                 CmdGetInitialCards();
             }
-        }
-        else
-        {
-            Debug.Log("Entering Coroutine");
-            StartCoroutine(WaitForPlayerRegister(PlayerPrefs.GetString("Name")));
+
+            isStarted = true;
+
         }
     }
-
-    public IEnumerator WaitForPlayerRegister(string name)
-    {
-        while (!IsInWaitingScene())
-        {
-            Debug.Log("Not in waiting scene!");
-            yield return new WaitForSeconds(0.5f);
-            WaitForPlayerRegister(name);
-        }
-
-        Debug.Log("In Coroutine");
-        player = GameObject.Find("Player").GetComponent<Player>();
-        waitingPlayersPanel = GameObject.Find("PlayersPanel").GetComponent<WaitingPlayersPanel>();
-        Debug.Log("Initialized objects; "+ isLocalPlayer);
-
-        if (isLocalPlayer)
-        {
-            CmdRegisterPlayer(PlayerPrefs.GetString("Name"));
-        }
-            
-
-        yield return null;
-    }
-
-
-    private bool IsInWaitingScene()
-    {
-        return SceneManager.GetActiveScene().name == "WaitingScene";
-    }
-
     // -----------------------------------------
     // --- COMMANDS, RPCs and Network Stuff ----
     // -----------------------------------------
 
     [Command]
-    void CmdRegisterPlayer(string playerName)
+    public void CmdSignalPlayerReady()
     {
-        if (player.connectedPlayers < 4)
+        int index = networkManager.GetConnectedClients().IndexOf(connectionToClient);
+        player.SetPlayerReady(index);
+
+        // Start game
+        if(player.AllPlayersReady())
+        {
+            // Spawn tables
+            CmdSpawnTables();
+
+            // Spawn initial card
+            ColorCard cc;
+            do
+            {
+                cc = ColorCardStack.DrawCard();
+                CmdSpawnCardOnGameboard(cc);
+            } while (cc.type != ColorCard.Type.STANDARD);
+
+            // Start game
+            player.SetCurrentPlayerIndex(0); // Server starts always first
+            player.SetTurn(true);
+            RpcPlayerIndexChanged(0);
+        }
+    }
+
+    [Command]
+    public void CmdUnregisterPlayer(int index)
+    {
+        // Remove name from name array
+        string[] names = Player.playerNames;
+        for (int i = index; i < names.Length; i++)
+        {
+            if (index < names.Length - 1)
+                names[index] = names[index + 1];
+            else
+                names[index] = "";
+        }
+        // Save new player configuration
+        player.SetPlayers(names, Player.connectedPlayers-1);
+        // Notify clients
+        RpcConnectedPlayersUpdate(Player.playerNames, Player.connectedPlayers);    
+    }
+
+    [Command]
+    public void CmdRegisterPlayer(string playerName)
+    {
+        player = GameObject.Find("Player").GetComponent<Player>();
+        if (Player.connectedPlayers < 4)
         {
             player.AddPlayer(playerName);
-            RpcConnectedPlayersUpdate(player.playerNames, player.connectedPlayers);
+            RpcConnectedPlayersUpdate(Player.playerNames, Player.connectedPlayers);
 
             // UPDATE OUR UI
-            waitingPlayersPanel.UpdatePlayersPanel(player.connectedPlayers, player.playerNames);
-            Debug.Log("Register player: " + player.connectedPlayers + ", " + playerName);
+            Debug.Log("Register player: " + Player.connectedPlayers + ", " + playerName);
         }
     }
 
@@ -124,7 +165,6 @@ public class PlayerConnection : NetworkBehaviour
         {
             // UPDATE OUR UI
             player.SetPlayers(names, players);
-            waitingPlayersPanel.UpdatePlayersPanel(player.connectedPlayers, player.playerNames);
         }
     }
 
@@ -132,23 +172,21 @@ public class PlayerConnection : NetworkBehaviour
     public void CmdSpawnTables()
     {
         // Spawn tables
-        int count = NetworkServer.connections.Count;
-
-        player.SpawnTables(count);
-        RpcSpawnTables(count);
+        player.SpawnTables(Player.connectedPlayers, Player.playerNames, Player.myPlayerIndex);
+        RpcSpawnTables();
     }
 
     [ClientRpc]
-    void RpcSpawnTables(int count)
+    void RpcSpawnTables()
     {
         // We have to wait because player == null on clients when they first get the rpc
-        StartCoroutine(SpawnTablesWhenReady(count));
+        player.SpawnTables(Player.connectedPlayers, Player.playerNames, Player.myPlayerIndex);
     }
 
-    public IEnumerator SpawnTablesWhenReady(int count)
+    public IEnumerator SpawnTablesWhenReady()
     {
         yield return new WaitUntil(() => player != null);
-        player.SpawnTables(count);
+
         yield return null;
     }
 
@@ -156,7 +194,6 @@ public class PlayerConnection : NetworkBehaviour
     [Command]
     public void CmdPlayCard(ColorCard c)
     {
-
         Debug.Log("Player " + connectionToClient.connectionId + " played Unocard: " + c.value + ", " + c.color + ", " + c.value);
         // Spawn the card on the board
         CmdSpawnCardOnGameboard(c);
@@ -184,8 +221,10 @@ public class PlayerConnection : NetworkBehaviour
     public void CmdSetNextTurn()
     {
         CmdIncrementPlayerIndex(); // Set next player
-        // Set next player active
-        TargetSetPlayersTurn(NetworkServer.connections[player.GetCurrentPlayerIndex()], true, player.GetCurrentDrawCount());
+        
+        RpcPlayerIndexChanged(player.GetCurrentPlayerIndex()); // Update Tables
+     
+        TargetSetPlayersTurn(networkManager.GetConnectedClients()[player.GetCurrentPlayerIndex()], true, player.GetCurrentDrawCount()); // Set next player active
     }
 
     [TargetRpc]
@@ -209,22 +248,24 @@ public class PlayerConnection : NetworkBehaviour
     [Command]
     public void CmdIncrementPlayerIndex()
     {
-        ReadOnlyCollection<NetworkConnection> players = NetworkServer.connections; // All connections
         int idx = player.GetCurrentPlayerIndex();
-        do
-        {
-            if (!player.GetReverse())
-            {
-                idx = (idx + 1) % players.Count;
-            }        
-            else
-            {
-                idx -= 1;
-                if (idx < 0)
-                    idx = players.Count - 1;
-            }
-        } while (players[idx] == null); // This loop is to check for disconnected clients which will be null, then we need to increment even further
 
+        if (!player.GetReverse())
+        {
+            idx = (idx + 1) % Player.connectedPlayers;
+        }        
+        else
+        {
+            idx -= 1;
+            if (idx < 0)
+                idx = Player.connectedPlayers - 1;
+        }
+        player.SetCurrentPlayerIndex(idx);
+    }
+
+    [ClientRpc]
+    public void RpcPlayerIndexChanged(int idx)
+    {
         player.SetCurrentPlayerIndex(idx);
     }
 

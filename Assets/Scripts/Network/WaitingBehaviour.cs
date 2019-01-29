@@ -2,17 +2,36 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 
-public class WaitingBehaviour : NetworkBehaviour
+public class WaitingBehaviour : MonoBehaviour
 {
-    // The UI element displaying the connected players
-    public WaitingPlayersPanel panel;
-    public WaitingPlayercountText text;
 
-    [ClientRpc]
-    public void RpcSetConnectedPlayers(int count, string[] names)
+    PlayerConnection localPlayer;
+    private Player player;
+    private WaitingPlayersPanel waitingPlayersPanel;
+
+    // Start is called before the first frame update
+    void Start()
     {
-        panel.UpdatePlayersPanel(count, names);
-        text.SetPlayerCount(count);
+        // Find local player object
+        PlayerConnection[] allPlayers = GameObject.FindObjectsOfType<PlayerConnection>();
+
+        foreach(PlayerConnection player in allPlayers)
+        {
+            if (player.isLocalPlayer)
+                localPlayer = player;
+        }
+
+        player = GameObject.Find("Player").GetComponent<Player>();
+        waitingPlayersPanel = GameObject.Find("PlayersPanel").GetComponent<WaitingPlayersPanel>();
+
+        // localPlayer.CmdRegisterPlayer(PlayerPrefs.GetString("Name"));
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        
     }
 }

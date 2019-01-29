@@ -11,7 +11,21 @@ public class CustomNetworkManager : NetworkManager
     public bool isHosting = false;
     public bool isConnected = false;
 
+    public bool isHost = false;
+
     private int connectedPlayers = 0;
+
+    private PlayerConnection serverConnection;
+
+    public List<NetworkConnection> GetConnectedClients()
+    {
+        return connectedClients;
+    }
+
+    public void SetServerConnection(PlayerConnection conn)
+    {
+        serverConnection = conn;
+    }
 
     void SetPort(int port)
     {
@@ -98,13 +112,11 @@ public class CustomNetworkManager : NetworkManager
         Debug.Log("Client " + conn.address + " disconnected!");
         connectedPlayers--;
 
+        int index = connectedClients.IndexOf(conn);
         connectedClients.Remove(conn);
 
         // Tell clients that the server state changed
-        if (SceneManager.GetActiveScene().name == "WaitingScene")
-        {
-            
-        }
+        serverConnection.CmdUnregisterPlayer(index);
     }
 
     /// <summary>
@@ -114,7 +126,6 @@ public class CustomNetworkManager : NetworkManager
     public override void OnClientConnect(NetworkConnection conn)
     {
         base.OnClientConnect(conn);
-
     }
 
     /// <summary>
@@ -128,10 +139,11 @@ public class CustomNetworkManager : NetworkManager
         // Switch to Lobby if client was disconnected while in game scene
         Scene currentScene = SceneManager.GetActiveScene();
         string sceneName = currentScene.name;
-        if (sceneName == "MainScene")
+        if (sceneName == "MainScene" || sceneName == "WaitingScene")
         {
             StopConnection();
             StopHosting();
+            SceneManager.LoadScene("MultiplayerScene");
         }     
     }
 

@@ -11,11 +11,12 @@ public class JoingameEnterButton : MonoBehaviour
     {
         // Get selected game
         LanConnnectionInfo game = gameScrollRect.GetSelectedCard().GetGameInfo();
+
+        SceneManager.LoadScene("WaitingScene");
+
         // Stop listening
         FindObjectOfType<ConnectionDiscovery>().Stop();
         // Connect to selected game
         FindObjectOfType<CustomNetworkManager>().StartConnection(game);
-        // Switch scene
-        SceneManager.LoadScene("WaitingScene");
     }
 }
