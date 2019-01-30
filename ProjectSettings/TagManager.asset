@@ -15,7 +15,7 @@ TagManager:
   - 
   - 
   - Game
-  - 
+  - Finish
   - 
   - 
   - 
@@ -50,4 +50,7 @@ TagManager:
     locked: 0
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Panels
+    uniqueID: 253601689
     locked: 0

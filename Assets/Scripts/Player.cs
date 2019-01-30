@@ -159,6 +159,11 @@ public class Player : MonoBehaviour
         MyCards.Remove(card);
     }
 
+    public bool HasWon()
+    {
+        return MyCards.Count == 0;
+    }
+
     public void SetTurn(bool turn, int drawCount)
     {
         hasTurn = turn;
