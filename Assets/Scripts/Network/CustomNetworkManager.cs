@@ -143,6 +143,15 @@ public class CustomNetworkManager : NetworkManager
         {
             StopConnection();
             StopHosting();
+
+            // Reset all buffered values
+            GameObject player = GameObject.Find("Player");
+            if (player!= null)
+            {
+                player.GetComponent<Player>().ResetAllValues();
+                Destroy(player);
+            }
+
             SceneManager.LoadScene("MultiplayerScene");
         }     
     }

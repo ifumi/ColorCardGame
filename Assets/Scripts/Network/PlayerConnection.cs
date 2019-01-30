@@ -121,7 +121,7 @@ public class PlayerConnection : NetworkBehaviour
 
             // Start game
             player.SetCurrentPlayerIndex(0); // Server starts always first
-            player.SetTurn(true);
+            player.SetTurn(true, 0);
             RpcPlayerIndexChanged(0);
         }
     }
@@ -153,7 +153,6 @@ public class PlayerConnection : NetworkBehaviour
             player.AddPlayer(playerName);
             RpcConnectedPlayersUpdate(Player.playerNames, Player.connectedPlayers);
 
-            // UPDATE OUR UI
             Debug.Log("Register player: " + Player.connectedPlayers + ", " + playerName);
         }
     }
@@ -182,14 +181,6 @@ public class PlayerConnection : NetworkBehaviour
         // We have to wait because player == null on clients when they first get the rpc
         player.SpawnTables(Player.connectedPlayers, Player.playerNames, Player.myPlayerIndex);
     }
-
-    public IEnumerator SpawnTablesWhenReady()
-    {
-        yield return new WaitUntil(() => player != null);
-
-        yield return null;
-    }
-
 
     [Command]
     public void CmdPlayCard(ColorCard c)

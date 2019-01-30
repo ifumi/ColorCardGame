@@ -6,10 +6,11 @@ using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
-
     public CardWheel cardWheel;
     public ColorPicker colorPicker;
     public ColorIndicator colorIndicator;
+    public DrawIndicator drawIndicator;
+
     public TablesManager tablesManager;
 
     private ColorCard topCard;
@@ -20,7 +21,7 @@ public class Player : MonoBehaviour
     public static int connectedPlayers = 0;
     public static int myPlayerIndex;
 
-    public static int[] playerCardsCount = new int[4];
+    public static int[] playerCardsCount = new int[4]; // TODO
     public static bool[] playersReady = new bool[] {false, false, false, false};
 
     // For game logic
@@ -31,6 +32,15 @@ public class Player : MonoBehaviour
 
     private PlayerConnection connection;
     private WaitingPlayersPanel waitingPlayersPanel;
+
+    public void ResetAllValues()
+    {
+        playerNames = new string[4];
+        connectedPlayers = 0;
+        myPlayerIndex = 0;
+        playerCardsCount = new int[4];
+        playersReady = new bool[] { false, false, false, false };
+    }
 
     public void SetPlayerReady(int index)
     {
@@ -164,6 +174,12 @@ public class Player : MonoBehaviour
             if (drawCount != 0)
                 currentDrawCount = drawCount;
         }
+
+        // Check if we have to show the draw indicator
+        if (hasTurn && MustDrawBeforePlaying())
+        {
+            drawIndicator.Show();
+        }
     }
 
     public void DrawCards()
@@ -222,7 +238,29 @@ public class Player : MonoBehaviour
     public bool MustDrawBeforePlaying()
     {
         if (currentDrawCount > 0)
-            return true;
+        {
+            if (topCard.type == ColorCard.Type.WILD4 && HasCardOfType(ColorCard.Type.WILD4))
+            {
+                return false;
+            }
+            else if (topCard.type == ColorCard.Type.DRAW2 && HasCardOfType(ColorCard.Type.DRAW2))
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private bool HasCardOfType(ColorCard.Type type)
+    {
+        foreach(ColorCard card in MyCards)
+        {
+            if (card.type == type) return true;
+        }
         return false;
     }
 
@@ -230,11 +268,6 @@ public class Player : MonoBehaviour
     void Awake()
     {
         MyCards = new List<ColorCard>();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
     }
 
     public void SpawnTables(int count, string[] names, int myPlayerIndex)

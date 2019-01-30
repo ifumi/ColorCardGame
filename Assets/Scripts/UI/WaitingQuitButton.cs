@@ -16,6 +16,12 @@ public class WaitingQuitButton : MonoBehaviour
             Destroy(networkManager);
             NetworkManager.Shutdown();
         }
+        GameObject player = GameObject.Find("Player");
+        if (player != null)
+        {
+            player.GetComponent<Player>().ResetAllValues();
+            Destroy(player);
+        }
 
         SceneManager.LoadScene("MultiplayerScene");
     }

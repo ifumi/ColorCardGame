@@ -4,26 +4,31 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 
-public class WaitingCancelButton : MonoBehaviour
+public class MainBackButton : MonoBehaviour
 {
 
-    public void CancelHosting()
+    public void BackClicked()
     {
         // Stop Hosting
         FindObjectOfType<ConnectionDiscovery>().Stop(); // Stop broadcasting game name
         FindObjectOfType<CustomNetworkManager>().StopHosting(); // Stop hosting
+        FindObjectOfType<CustomNetworkManager>().StopConnection(); // Stop connecion
 
         GameObject networkManager = GameObject.Find("NetworkManager");
-        GameObject player = GameObject.Find("Player");
         if (networkManager != null)
         {
-            player.GetComponent<Player>().ResetAllValues();
+            // Reset all buffered values         
             Destroy(networkManager);
-            Destroy(player);
             NetworkManager.Shutdown();
         }
-            
-        SceneManager.LoadScene("CreategameScene");
+        GameObject player = GameObject.Find("Player");
+        if (player != null)
+        {
+            player.GetComponent<Player>().ResetAllValues();
+            Destroy(player);
+        }
+
+        SceneManager.LoadScene("MultiplayerScene");
     }
 
 
