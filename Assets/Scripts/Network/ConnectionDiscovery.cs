@@ -26,7 +26,10 @@ public class ConnectionDiscovery : NetworkDiscovery
     public void StartBroadcasting(string gameName, string hostName)
     {
         if (!isBroadcasting && !isListening)
-        {            
+        {
+            if (Application.platform == RuntimePlatform.Android)
+                MulticastLock();
+
             broadcastData = gameName + ";" + hostName;
             broadcastData = broadcastData.PadRight(20, '#');
             Initialize();

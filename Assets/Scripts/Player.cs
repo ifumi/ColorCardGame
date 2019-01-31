@@ -11,7 +11,10 @@ public class Player : MonoBehaviour
     public ColorIndicator colorIndicator;
     public DrawIndicator drawIndicator;
 
+    public GameOverPanel gameOverPanel;
+
     public TablesManager tablesManager;
+    public CardWheelManager cardWheelManager;
 
     private ColorCard topCard;
     private List<ColorCard> MyCards;
@@ -26,6 +29,7 @@ public class Player : MonoBehaviour
 
     // For game logic
     private bool hasTurn = false;
+    public bool isGameOver = false;
     private int currentPlayerIndex;
     private int currentDrawCount;
     private bool reverse;
@@ -293,5 +297,17 @@ public class Player : MonoBehaviour
     public bool GetReverse()
     {
         return reverse;
+    }
+
+    public void SetCardsCount(int[] count)
+    {
+        playerCardsCount = count;
+        cardWheelManager.SetCards(connectedPlayers, playerCardsCount, myPlayerIndex);
+    }
+
+    public void SetWinner(int index)
+    {
+        gameOverPanel.Show(playerNames[index]);
+        isGameOver = true;
     }
 }

@@ -13,9 +13,15 @@ public class CardWheel : MonoBehaviour {
 	public static readonly float THROW_SWIPE_SENSITIVITY = 50f;
 	public static readonly float THROW_SWIPE_BORDER = 200f;
 
+    public int ROTATION_OFFSET = 0;
+
     public Vector2 startPos;
     public Vector2 direction;
     public bool wasMoved;
+
+    // For static wheel
+    public bool isStatic = false;
+    public int cardCount = 0;
 
     public float MaxDoubleTapTime = 0.4f;
     int TapCount;
@@ -35,9 +41,10 @@ public class CardWheel : MonoBehaviour {
 	private List<GameObject> cardUIObjects; // All cards from the player object as gameObjects in wheel
     private List<ColorCard> addedCards;
 
+
     // Use this for initialization 
     // Called when the scene is loaded
-	void Awake () {
+    void Awake () {
         cardUIObjects = new List<GameObject>();
         addedCards = new List<ColorCard>();
 
@@ -51,6 +58,10 @@ public class CardWheel : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+
+        if (player.isGameOver || isStatic)
+            return;
+
 		if (Input.touchCount == 1) {
 			Touch t = Input.GetTouch (0);
 
@@ -231,7 +242,7 @@ public class CardWheel : MonoBehaviour {
 	/// </summary>
 	public void RotateWheel() {
 		if (cardUIObjects.Count > 1) {
-			transform.rotation = Quaternion.Euler (0, 0, (cardUIObjects.Count - 1)*CARD_ANGLE_INCREMENT/2);
+			transform.rotation = Quaternion.Euler (0, 0, (cardUIObjects.Count - 1)*CARD_ANGLE_INCREMENT/2 + ROTATION_OFFSET);
 			currentRotationAngle = gameObject.transform.rotation.eulerAngles.z;
 			MoveCardWheelZ ();
 		}
@@ -251,6 +262,7 @@ public class CardWheel : MonoBehaviour {
 
 		cardUIObjects.Add(newCard);
         addedCards.Add(card);
+        cardCount++;
 
         RealingnCards();
 	}
@@ -268,6 +280,25 @@ public class CardWheel : MonoBehaviour {
         // Remove from our lists
         cardUIObjects.RemoveAt(index);
         addedCards.RemoveAt(index);
+        cardCount--;
+
+        RealingnCards();
+    }
+
+    public void RemoveFirstCard()
+    {
+        int index = 0;
+        // Remove gameobject from wheel
+        GameObject go = cardUIObjects[index];
+        if (go != null)
+        {
+            Destroy(go); // Maybe do some cool animated stuff here.
+        }
+
+        // Remove from our lists
+        cardUIObjects.RemoveAt(index);
+        addedCards.RemoveAt(index);
+        cardCount--;
 
         RealingnCards();
     }

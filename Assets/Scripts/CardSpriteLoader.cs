@@ -75,6 +75,9 @@ public class CardSpriteLoader : MonoBehaviour {
 
         switch (t)
         {
+            case ColorCard.Type.NONE:
+                front = BACK;
+                break;
             case ColorCard.Type.STANDARD:
                 switch (c)
                 {

@@ -47,6 +47,8 @@ public class CustomNetworkManager : NetworkManager
             connectedClients = new List<NetworkConnection>();
             NetworkManager.singleton.StartHost();
             isHosting = true;
+
+            ServerChangeScene("WaitingScene"); // goto waiting scene (all clients)
         }
     }
 
@@ -152,7 +154,8 @@ public class CustomNetworkManager : NetworkManager
                 Destroy(player);
             }
 
-            SceneManager.LoadScene("MultiplayerScene");
+            if (!player.GetComponent<Player>().isGameOver)
+                SceneManager.LoadScene("MultiplayerScene");
         }     
     }
 

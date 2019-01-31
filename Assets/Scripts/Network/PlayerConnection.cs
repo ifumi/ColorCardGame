@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class PlayerConnection : NetworkBehaviour
 {
@@ -92,12 +93,33 @@ public class PlayerConnection : NetworkBehaviour
             }
 
             isStarted = true;
+        }
 
+
+        if (player == null)
+        {
+            GameObject p = GameObject.Find("Player");
+            if (p != null) player = p.GetComponent<Player>();
         }
     }
     // -----------------------------------------
     // --- COMMANDS, RPCs and Network Stuff ----
     // -----------------------------------------
+
+    [Command]
+    public void CmdSetWinner(int index)
+    {
+        // Show UI
+        player.SetWinner(index);
+        RpcSetWinner(index);
+    }
+
+    [ClientRpc]
+    public void RpcSetWinner(int index)
+    {
+        // Show UI
+        player.SetWinner(index);
+    }
 
     [Command]
     public void CmdSignalPlayerReady()
@@ -118,6 +140,10 @@ public class PlayerConnection : NetworkBehaviour
                 cc = ColorCardStack.DrawCard();
                 CmdSpawnCardOnGameboard(cc);
             } while (cc.type != ColorCard.Type.STANDARD);
+
+            // Init card count for each player
+            Player.playerCardsCount = new int[] { 7, 7, 7, 7 };
+            RpcSetPlayerCardsCount(Player.playerCardsCount); // Sync with clients
 
             // Start game
             player.SetCurrentPlayerIndex(0); // Server starts always first
@@ -160,9 +186,12 @@ public class PlayerConnection : NetworkBehaviour
     [ClientRpc]
     void RpcConnectedPlayersUpdate(string[] names, int players)
     {
-        if (SceneManager.GetActiveScene().name == "WaitingScene")
+        if (SceneManager.GetActiveScene().name == "WaitingScene" || SceneManager.GetActiveScene().name == "MainScene")
         {
+            Debug.Log("SetPlayers Update: " + players );
             // UPDATE OUR UI
+            if (player == null)
+                player = GameObject.Find("Player").GetComponent<Player>();
             player.SetPlayers(names, players);
         }
     }
@@ -186,8 +215,26 @@ public class PlayerConnection : NetworkBehaviour
     public void CmdPlayCard(ColorCard c)
     {
         Debug.Log("Player " + connectionToClient.connectionId + " played Unocard: " + c.value + ", " + c.color + ", " + c.value);
+
+        // Decrement card count for playing player
+        int playerIdx = networkManager.GetConnectedClients().IndexOf(connectionToClient);
+        Player.playerCardsCount[playerIdx] -= 1;
+        player.SetCardsCount(Player.playerCardsCount);
+
+        // Sync new card count with all clients
+        RpcSetPlayerCardsCount(Player.playerCardsCount);
+
         // Spawn the card on the board
         CmdSpawnCardOnGameboard(c);
+
+        // Check win
+        if (Player.playerCardsCount[playerIdx] == 0)
+        {
+            // Player won
+            CmdSetWinner(playerIdx);
+            return;
+        }
+
 
         // Check if we have to do something (set reverse or set drawCount)
         int count = player.GetCurrentDrawCount();
@@ -206,6 +253,12 @@ public class PlayerConnection : NetworkBehaviour
             CmdIncrementPlayerIndex();
 
         player.SetCurrentDrawCount(count); // Save it on the server
+    }
+
+    [ClientRpc]
+    public void RpcSetPlayerCardsCount(int[] count)
+    {
+        player.SetCardsCount(count);
     }
 
     [Command]
@@ -309,7 +362,12 @@ public class PlayerConnection : NetworkBehaviour
         if (player.GetCurrentDrawCount() > 0)
             player.SetCurrentDrawCount(player.GetCurrentDrawCount() - 1);
 
+        int index = networkManager.GetConnectedClients().IndexOf(connectionToClient);
+        Player.playerCardsCount[index] += 1;
+        player.SetCardsCount(Player.playerCardsCount);
 
+        // Sync new card count with all clients
+        RpcSetPlayerCardsCount(Player.playerCardsCount);
     }
 
     /// <summary>

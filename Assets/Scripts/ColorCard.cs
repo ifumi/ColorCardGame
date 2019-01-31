@@ -7,7 +7,7 @@
 
     public enum Type
     {
-        STANDARD, DRAW2, SKIP, REVERSE, WILD, WILD4, WILDRANDOM
+        STANDARD, DRAW2, SKIP, REVERSE, WILD, WILD4, WILDRANDOM, NONE
     }
 
     public Color color;
