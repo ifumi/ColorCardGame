@@ -28,7 +28,7 @@ public class CardWheel : MonoBehaviour {
     float NewTime;
 
     private float currentRotationAngle = 0;
-	private Vector3 originalWheelPosition;
+	public Vector3 originalWheelPosition;
 
 	private int currentHighlightIndex = 0; // Current card index to highlight
 	private Vector2 firstPressPos, secondPressPos, currentSwipe; // for swipe detection
@@ -49,7 +49,7 @@ public class CardWheel : MonoBehaviour {
         addedCards = new List<ColorCard>();
 
 		cardDepth = 0.005f;
-		originalWheelPosition = gameObject.transform.position;
+		originalWheelPosition = gameObject.transform.position;  
 
 		RotateWheel ();
         TapCount = 0;
@@ -241,11 +241,11 @@ public class CardWheel : MonoBehaviour {
 	/// Rotates the card wheel so that it is centered.
 	/// </summary>
 	public void RotateWheel() {
-		if (cardUIObjects.Count > 1) {
+		if (cardUIObjects.Count >= 1) {
 			transform.rotation = Quaternion.Euler (0, 0, (cardUIObjects.Count - 1)*CARD_ANGLE_INCREMENT/2 + ROTATION_OFFSET);
 			currentRotationAngle = gameObject.transform.rotation.eulerAngles.z;
 			MoveCardWheelZ ();
-		}
+		} 
 	}
 
 

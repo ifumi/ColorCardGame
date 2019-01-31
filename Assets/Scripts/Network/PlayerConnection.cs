@@ -164,10 +164,14 @@ public class PlayerConnection : NetworkBehaviour
             else
                 names[index] = "";
         }
-        // Save new player configuration
-        player.SetPlayers(names, Player.connectedPlayers-1);
-        // Notify clients
-        RpcConnectedPlayersUpdate(Player.playerNames, Player.connectedPlayers);    
+
+        if (!player.isGameOver)
+        {
+            // Save new player configuration
+            player.SetPlayers(names, Player.connectedPlayers - 1);
+            // Notify clients
+            RpcConnectedPlayersUpdate(Player.playerNames, Player.connectedPlayers);
+        }
     }
 
     [Command]
@@ -259,6 +263,7 @@ public class PlayerConnection : NetworkBehaviour
     public void RpcSetPlayerCardsCount(int[] count)
     {
         player.SetCardsCount(count);
+        Debug.Log("Update: " + count[0] + ", " + count[1] + ", " + count[2] + ", " + count[3]);
     }
 
     [Command]

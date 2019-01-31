@@ -93,6 +93,9 @@ public class Player : MonoBehaviour
 
         if (tablesManager != null)
             tablesManager.SpawnTables(count, names, myPlayerIndex);
+
+        if (cardWheelManager != null)
+            cardWheelManager.SpawnWheels(count);
     }
 
     public void SetCurrentPlayerIndex(int idx)

@@ -8,6 +8,7 @@ public class StaticCardWheel : CardWheel
     void Start()
     {
         isStatic = true;
+        originalWheelPosition = gameObject.transform.position;
     }
 
     public void SetCardCount(int count)
