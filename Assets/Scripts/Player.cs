@@ -27,6 +27,8 @@ public class Player : MonoBehaviour
     public static int[] playerCardsCount = new int[4]; // TODO
     public static bool[] playersReady = new bool[] {false, false, false, false};
 
+    public static string ingameName; // Set by the server if we need to get a new name (duplicates)
+
     // For game logic
     private bool hasTurn = false;
     public bool isGameOver = false;
@@ -37,6 +39,20 @@ public class Player : MonoBehaviour
     private PlayerConnection connection;
     private WaitingPlayersPanel waitingPlayersPanel;
 
+    // Start is called before the first frame update
+    void Awake()
+    {
+        MyCards = new List<ColorCard>();
+    }
+
+    private void Start()
+    {
+        ingameName = PlayerPrefs.GetString("Name");
+
+        if (SceneManager.GetActiveScene().name == "WaitingScene")
+            waitingPlayersPanel = GameObject.Find("PlayersPanel").GetComponent<WaitingPlayersPanel>();
+    }
+
     public void ResetAllValues()
     {
         playerNames = new string[4];
@@ -45,6 +61,8 @@ public class Player : MonoBehaviour
         playerCardsCount = new int[4];
         playersReady = new bool[] { false, false, false, false };
     }
+
+    // --- READY CHECKS
 
     public void SetPlayerReady(int index)
     {
@@ -60,14 +78,11 @@ public class Player : MonoBehaviour
         return true;
     }
 
-    private void Start()
-    {
-        if (SceneManager.GetActiveScene().name == "WaitingScene")
-            waitingPlayersPanel = GameObject.Find("PlayersPanel").GetComponent<WaitingPlayersPanel>();           
-    }
+    // CHANGE PLAYERS IN GAME
 
     public void AddPlayer(string name)
     {
+
         playerNames[connectedPlayers] = name;
         connectedPlayers++;
 
@@ -85,7 +100,7 @@ public class Player : MonoBehaviour
 
         foreach (string name in names)
         {
-            if (name == PlayerPrefs.GetString("Name"))
+            if (name == ingameName)
             {
                 myPlayerIndex = Array.IndexOf(names, name);
             }
@@ -97,6 +112,8 @@ public class Player : MonoBehaviour
         if (cardWheelManager != null)
             cardWheelManager.SpawnWheels(count);
     }
+
+    // ---- GAME CONTROL
 
     public void SetCurrentPlayerIndex(int idx)
     {
@@ -119,10 +136,14 @@ public class Player : MonoBehaviour
         return currentDrawCount;
     }
 
+    ///// ---- NETWORK
+
     public void SetConnection(PlayerConnection conn)
     {
         connection = conn;
     }
+
+    //// ---- cARDS
 
     public void AddCard(ColorCard cc)
     {
@@ -146,11 +167,6 @@ public class Player : MonoBehaviour
         return topCard;
     }
 
-    public void SetTurn(bool turn)
-    {
-        hasTurn = turn;
-    }
-
     public void PlayCard(ColorCard card)
     {
         connection.CmdPlayCard(card); // send the card to the server
@@ -166,9 +182,9 @@ public class Player : MonoBehaviour
         MyCards.Remove(card);
     }
 
-    public bool HasWon()
+    public void SetTurn(bool turn)
     {
-        return MyCards.Count == 0;
+        hasTurn = turn;
     }
 
     public void SetTurn(bool turn, int drawCount)
@@ -207,6 +223,8 @@ public class Player : MonoBehaviour
         }       
     }
 
+
+
     private IEnumerator WaitForCardsToArrive(int targetCountCard)
     {
         yield return new WaitUntil(() => MyCards.Count == targetCountCard); // Wait til cards arrive
@@ -232,6 +250,10 @@ public class Player : MonoBehaviour
         colorPicker.Hide();
     }
 
+    public bool HasWon()
+    {
+        return MyCards.Count == 0;
+    }
 
     public bool HasTurn()
     {
@@ -274,12 +296,6 @@ public class Player : MonoBehaviour
             if (card.type == type) return true;
         }
         return false;
-    }
-
-    // Start is called before the first frame update
-    void Awake()
-    {
-        MyCards = new List<ColorCard>();
     }
 
     public void SpawnTables(int count, string[] names, int myPlayerIndex)

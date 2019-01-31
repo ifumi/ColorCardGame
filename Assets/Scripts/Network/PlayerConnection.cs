@@ -29,26 +29,6 @@ public class PlayerConnection : NetworkBehaviour
 
         if (isLocalPlayer)
             networkManager.SetServerConnection(this);
-
-        SceneManager.sceneLoaded += OnSceneLoaded;
-    }
-
-    private void OnDestroy()
-    {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
-
-    private void OnSceneLoaded(Scene scene, LoadSceneMode arg1)
-    {
-        switch (scene.name)
-        {
-            case "MainScene":
-                if (!isStarted)
-                {
-
-                }
-                break;
-        }
     }
 
     private void Update()
@@ -167,9 +147,15 @@ public class PlayerConnection : NetworkBehaviour
 
         if (!player.isGameOver)
         {
+            // Player who disconnected had the turn, pass on to next;
+            if (player.GetCurrentPlayerIndex() == index && isStarted)
+            {
+                CmdSetNextTurn();
+            }
+
             // Save new player configuration
             player.SetPlayers(names, Player.connectedPlayers - 1);
-            // Notify clients
+            // Notify clients with new configuration
             RpcConnectedPlayersUpdate(Player.playerNames, Player.connectedPlayers);
         }
     }
@@ -180,11 +166,28 @@ public class PlayerConnection : NetworkBehaviour
         player = GameObject.Find("Player").GetComponent<Player>();
         if (Player.connectedPlayers < 4)
         {
+            int idx = 2;
+            bool changed = false;
+            while (Array.IndexOf(Player.playerNames, playerName) > -1)
+            {
+                // Contains name already
+                playerName += idx++;
+                changed = true;
+            }
+            if (changed)
+                TargetTellNewName(connectionToClient, playerName);
+
             player.AddPlayer(playerName);
             RpcConnectedPlayersUpdate(Player.playerNames, Player.connectedPlayers);
 
             Debug.Log("Register player: " + Player.connectedPlayers + ", " + playerName);
         }
+    }
+
+    [TargetRpc]
+    public void TargetTellNewName(NetworkConnection conn, string name)
+    {
+        Player.ingameName = name;
     }
 
     [ClientRpc]
@@ -292,6 +295,15 @@ public class PlayerConnection : NetworkBehaviour
         player.SetTopCard(c);
 
         RpcSetTopColor(color); 
+    }
+
+    [Command]
+    public void CmdSetNewPlayerIndex(int idx)
+    {
+        player.SetCurrentPlayerIndex(idx);
+        RpcPlayerIndexChanged(idx);
+
+        TargetSetPlayersTurn(networkManager.GetConnectedClients()[player.GetCurrentPlayerIndex()], true, player.GetCurrentDrawCount());
     }
 
     [Command]
